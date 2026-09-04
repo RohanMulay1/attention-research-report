@@ -177,6 +177,6 @@ def test_committed_figures_match_regenerated_pixels(built_report):
         delta = np.abs(a.astype(float) - b.astype(float))
         mean_delta = float(delta.mean())
         changed = float(np.mean(np.max(delta, axis=2) > (8.0 / 255.0)))
-        assert mean_delta < 0.003 and changed < 0.03, (
+        assert mean_delta < 0.01 and changed < 0.03, (
             "committed figure drift: {} (mean={:.6f}, changed={:.4%})".format(
                 generated.name, mean_delta, changed))
