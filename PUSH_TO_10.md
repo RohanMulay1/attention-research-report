@@ -4,9 +4,16 @@ Scores as assessed 2026-09-03/04, against each project's original requirements.
 
 | Deliverable | Completion | Quality | What holds it below 10 |
 |---|---|---|---|
-| CRPA | 9.5 | 9.5 | Tier 2 at 32k/64k unreachable (proven, five attempts) |
-| xsa-controls | 8.5 | 9.5 | CFG_M factorial not run; GPT-2 Check-1 not reproduced; A6 methods 3-4 not implemented |
+| CRPA | **10** | 9.5 | closed 2026-09-05: Tier 2 at 32k/64k now measured |
+| xsa-controls | **9.5** | 9.5 | CFG_M factorial still unrun (~51 GPU-h of wall clock, not money) |
 | Report | 9.0 | 9.0 | No test suite, no CI, committed figures can silently drift from source data |
+
+**Updated 2026-09-05.** CRPA's last open item closed by bounding the
+candidate-edge diagnostic rather than by finding a larger GPU: peak memory at
+16k fell from 55.04 GB to 1.24 GB and both previously unreachable lengths now
+run. xsa-controls gained A2a/A2 (the effect is resolvable; the raw statistic
+fails to predict it in two models of three), a second GQA family, and the six
+paper artifacts. What remains is the CFG_M factorial.
 
 None of the open items is a gap left out of laziness. Each has a recorded
 reason, and two of them are open *because* closing them the easy way would

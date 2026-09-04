@@ -87,40 +87,68 @@ P1_SECTIONS = [
         widths=[.26, .14, .14, .28, .18],
         aligns=["l", "r", "r", "l", "r"]),
     dict(
-        head="1.5&nbsp;&nbsp;Long context: measured cost, and a proven wall",
-        note="A fused dense kernel is faster at every length measured, at "
-             "equal memory, with the gap narrowing as context grows.",
+        head="1.5&nbsp;&nbsp;Long context: the wall was in the diagnostic",
+        note="A fused dense kernel is faster than the sparse gather path at "
+             "every length benchmarked, with the gap narrowing as context "
+             "grows. The benchmark itself was not run beyond 16k.",
         header=["Context", "Dense", "Sliding", "CRPA", "CRPA vs dense",
                 "Peak memory"],
         rows=[["4,096", "13.2 ms", "19.5 ms", "31.5 ms", "2.40x slower", "737 MB"],
               ["8,192", "30.0 ms", "62.4 ms", "60.1 ms", "2.00x slower", "1,181 MB"],
-              ["16,384", "72.0 ms", "218.1 ms", "119.1 ms", "1.65x slower", "2,067 MB"],
-              ["32,768", "&ndash;", "&ndash;", "&ndash;", "<i>not run</i>",
-               "<i>out of memory</i>"],
-              ["65,536", "&ndash;", "&ndash;", "&ndash;", "<i>not run</i>",
-               "<i>out of memory</i>"]],
+              ["16,384", "72.0 ms", "218.1 ms", "119.1 ms", "1.65x slower", "2,067 MB"]],
         widths=[.13, .13, .14, .13, .24, .23],
-        aligns=["r", "r", "r", "r", "c", "r"],
+        aligns=["r", "r", "r", "r", "c", "r"]),
+    dict(
+        head="1.6&nbsp;&nbsp;32k and 64k, previously unreachable, now measured",
+        note="Six attempts on 48GB and 80GB cards had all exhausted memory. "
+             "The cost was never in the model: bounding the candidate-edge "
+             "diagnostic closed both lengths on the same hardware.",
+        header=["Context", "Peak before", "Peak after", "Retrieval",
+                "Realized overlap", "Largest single-edge delta"],
+        rows=[["4,096", "14.14 GB", "0.75 GB", "0.0%", "0.2265", "9.54e-07"],
+              ["8,192", "27.74 GB", "1.15 GB", "0.0%", "0.2256", "9.54e-07"],
+              ["16,384", "55.04 GB", "1.24 GB", "0.0%", "0.2297", "1.91e-06"],
+              ["32,768", "<i>out of memory</i>", "1.93 GB", "0.0%", "0.2308",
+               "9.54e-07"],
+              ["65,536", "<i>out of memory</i>", "3.30 GB", "0.0%", "0.2302",
+               "9.54e-07"]],
+        widths=[.13, .17, .15, .13, .19, .23],
+        aligns=["r", "r", "r", "r", "r", "r"],
         band=(3, 4),
-        after="32k and 64k were retried five times, including on an idle A100 "
-              "80GB at the correct profile with batch size 1 and adaptive "
-              "chunking. All exceed memory. The investigation established "
-              "something more useful than the failure: <b>a forward pass at "
-              "32k costs 1.90 GB peak</b>, so the model scales and the cost "
-              "sits in the diagnostic, not in inference."),
+        after="The measurement extends the central claim rather than "
+              "complicating it. The largest single-edge delta is "
+              "<b>9.5367e-07 at four of the five lengths, exactly one unit "
+              "in the last place</b>, and two at 16,384, against a float32 "
+              "resolution of 1.32e-06. Single-edge behavioural contribution "
+              "sits at the measurability floor across a sixteenfold range of "
+              "context, not only at the short lengths where it was first "
+              "seen. All five rows come from one implementation at one chunk "
+              "size, so the memory column compares like with like."),
+    dict(
+        figure="f9_bounded.png", width=.86,
+        caption="Figure 3. Peak memory of the candidate-edge diagnostic "
+                "before and after bounding it. The unbounded implementation "
+                "grew at 3.45 GB per 1,000 tokens and a linear fit to its "
+                "three measured points predicts 110 GB at 32k and 219 GB at "
+                "64k, both beyond the 80GB card. Streaming the overlap "
+                "measurement by layer, disabling autograd in the group "
+                "diagnostic and scoring edges in small chunks flattens the "
+                "profile to 0.75-3.30 GB across the whole range, a 44x "
+                "reduction at 16k. n = 1 seed, "
+                "138M parameters, bfloat16."),
     dict(
         figure="f8_cost.png", width=.90,
-        caption="Figure 3. Measured forward latency and peak allocated memory "
-                "at the three context lengths that fit. A fused dense kernel "
-                "is faster than the sparse gather path at every length, and "
-                "the gap narrows from 2.40x to 1.65x as context grows, so the "
-                "sparse path is closing but has not overtaken it by 16k. The "
-                "shaded region marks lengths that exhausted memory on every "
-                "attempt and are reported as not run rather than "
-                "extrapolated. Batch size 1, bfloat16, 138M parameters, "
-                "median of 10 iterations after 5 warmups."),
+        caption="Figure 4. Measured forward latency and peak allocated "
+                "memory at the three lengths the latency benchmark was run "
+                "at. A fused dense kernel is faster than the sparse gather "
+                "path at every one, and the gap narrows from 2.40x to 1.65x "
+                "as context grows, so the sparse path is closing but has not "
+                "overtaken it by 16k. The shaded region marks lengths not "
+                "benchmarked for latency; the diagnostic does now run there, "
+                "as section 1.6 reports. Batch size 1, bfloat16, 138M "
+                "parameters, median of 10 iterations after 5 warmups."),
     dict(
-        head="1.6&nbsp;&nbsp;Defects found and repaired",
+        head="1.7&nbsp;&nbsp;Defects found and repaired",
         note="Each of these changed a reported number.",
         header=["Defect", "Consequence"],
         rows=[["Central claim unsupported by its own measurement",
@@ -167,7 +195,7 @@ P2_SECTIONS = [
         band=(8,)),
     dict(
         figure="f3_ladder.png", width=.80,
-        caption="Figure 4. The anisotropy null weakens with scale but does not "
+        caption="Figure 5. The anisotropy null weakens with scale but does not "
                 "vanish. cos_null falls from 0.2637 at 160M to 0.1979 at 6.9B, "
                 "yet 58% of the raw statistic is still explained by the null "
                 "at 6.9B, and about half across the shaded range where the "
@@ -190,7 +218,7 @@ P2_SECTIONS = [
         bold=(2,)),
     dict(
         figure="f4_length.png", width=.88,
-        caption="Figure 5. The observed statistic is nearly flat across a "
+        caption="Figure 6. The observed statistic is nearly flat across a "
                 "sixteenfold change in context length while the null moves by "
                 "a third, so the self-specific share swings from 23.5% to "
                 "41.2%. A claim of the form &ldquo;only N% of this statistic is "
@@ -206,20 +234,68 @@ P2_SECTIONS = [
         header=["model", "query / KV heads", "within-group excess",
                 "across-group excess"],
         rows=[["Qwen2.5-0.5B", "14 / 2", "<b>+0.2415</b>", "<b>-0.1876</b>"],
-              ["Qwen2.5-1.5B", "12 / 2", "<b>+0.2731</b>", "<b>-0.1922</b>"]],
+              ["Qwen2.5-1.5B", "12 / 2", "<b>+0.2731</b>", "<b>-0.1922</b>"],
+              ["TinyLlama-1.1B", "32 / 4", "<b>+0.2373</b>", "<b>-0.1126</b>"]],
         widths=[.26, .20, .27, .27],
         aligns=["l", "r", "r", "r"]),
     dict(
         figure="f5_gqa.png", width=.72,
-        caption="Figure 6. Borrowing a neighbouring KV group's value at the "
+        caption="Figure 7. Borrowing a neighbouring KV group's value at the "
                 "same position does not merely lose the effect, it reverses "
                 "it. The self-value direction is specific to the head's own "
                 "group. GQA models also show a higher self-specific share, 56 "
-                "to 59%, than any multi-head model on the ladder, 37 to 52%, "
+                "to 68%, than any multi-head model on the ladder, 37 to 52%, "
                 "so grouped-query attention is not a neutral change of "
-                "variable for this family of methods. n = 2 models, 672 heads."),
+                "variable for this family of methods. The sign replicates "
+                "outside the Qwen family: TinyLlama-1.1B is a Llama "
+                "architecture with a different group ratio and its "
+                "across-group excess is also negative. The magnitude is about "
+                "40% smaller, so the sign generalises and the size does not. "
+                "n = 3 models across 2 families, 1,376 heads."),
     dict(
-        head="2.4&nbsp;&nbsp;The matched intervention, at full seed count",
+        head="2.4&nbsp;&nbsp;Does the statistic predict its own intervention?",
+        note="Each head's self-value is removed in a frozen model and the "
+             "change in loss measured twice, on disjoint halves of the "
+             "evaluation documents. Nothing is reported until A &times; V "
+             "rebuilds the model's own attention output.",
+        header=["model", "statistic", "raw rho", "split-half r", "ceiling",
+                "disattenuated", "verdict"],
+        rows=[["gpt2", "cos(y, v)", "<b>+0.450</b>", "+0.752", "0.864",
+               "<b>+0.521</b>", "reliable"],
+              ["gpt2", "excess", "+0.190", "+0.752", "0.864", "+0.220",
+               "reliable"],
+              ["pythia-160m", "cos(y, v)", "<b>+0.001</b>", "+0.304", "0.548",
+               "+0.002", "attenuated"],
+              ["pythia-160m", "excess", "<b>+0.396</b>", "+0.304", "0.548",
+               "<b>+0.723</b>", "attenuated"],
+              ["pythia-410m", "cos(y, v)", "<b>+0.039</b>", "+0.446", "0.659",
+               "+0.059", "attenuated"],
+              ["pythia-410m", "excess", "<b>+0.393</b>", "+0.446", "0.659",
+               "<b>+0.596</b>", "attenuated"]],
+        widths=[.16, .13, .12, .14, .12, .16, .17],
+        aligns=["l", "l", "r", "r", "r", "r", "l"],
+        band=(2, 3),
+        after="In both Pythia models the raw self-value cosine, the quantity "
+              "the method is motivated by, carries <b>essentially no "
+              "information</b> about the measured effect of removing it, "
+              "while the null-corrected excess predicts it. <b>In GPT-2 the "
+              "ordering reverses.</b> Two models agreeing and a third "
+              "disagreeing is not a law, so the claim is the narrow one: "
+              "whether a raw statistic predicts its own intervention is "
+              "model-dependent."),
+    dict(
+        figure="f10_a2.png", width=.86,
+        caption="Figure 8. Correlation between each per-head statistic and "
+                "the measured effect of removing that head's self-value. "
+                "Dashed lines mark the ceiling that split-half unreliability "
+                "places on any observable correlation, sqrt(r_delta &times; "
+                "r_stat); every bar sits below its own ceiling, which is what "
+                "makes the comparison legitimate. This is the check that "
+                "returned UNRESOLVABLE on the sibling CRPA project: here the "
+                "effect is resolvable, so the correlation can be read. "
+                "n = 3 models, 144 to 384 heads each."),
+    dict(
+        head="2.5&nbsp;&nbsp;The matched intervention, at full seed count",
         note="24 cells, 3 arms x 8 seeds, identical initialisation and data "
              "order per seed. Measured step-0 deviation across all five arms "
              "is 0.000e+00, so the arms start from a common point.",
@@ -232,7 +308,7 @@ P2_SECTIONS = [
         aligns=["l", "r", "r", "r", "r", "r"]),
     dict(
         figure="f6_paired.png", width=.88,
-        caption="Figure 7. Both arms fall inside the shaded band of effects "
+        caption="Figure 9. Both arms fall inside the shaded band of effects "
                 "the design cannot resolve. The minimum detectable effect is "
                 "0.00518 nats against the 0.00076 the method's own independent "
                 "replication reports, so the study is underpowered about "
@@ -241,7 +317,7 @@ P2_SECTIONS = [
                 "which is what Check 2 asks. Reported as a power failure, not "
                 "as a null result. n = 8 seeds per arm."),
     dict(
-        head="2.5&nbsp;&nbsp;The checklist discriminates between methods",
+        head="2.6&nbsp;&nbsp;The checklist discriminates between methods",
         note="Check 1 applied to two further methods on frozen GPT-2, each "
              "with a null matched to the structure the statistic inherits for "
              "free.",
@@ -257,14 +333,14 @@ P2_SECTIONS = [
         band=(2,)),
     dict(
         figure="f7_generality.png", width=.72,
-        caption="Figure 8. Attention sinks retain 99.2% of their statistic "
+        caption="Figure 10. Attention sinks retain 99.2% of their statistic "
                 "after a null matched for recency, and massive activations "
                 "71.7% against the maximum expected from a matched-variance "
                 "Gaussian. The self-value statistic retains 41.9%. The "
                 "checklist separates methods rather than debunking all of "
                 "them, which is a stronger position than a blanket null."),
     dict(
-        head="2.6&nbsp;&nbsp;A reproduction left failing on purpose",
+        head="2.7&nbsp;&nbsp;A reproduction left failing on purpose",
         note="Published GPT-2 reference: cos_self 0.5406, cos_null 0.3798, "
              "excess 0.1608. Thirteen measurement conventions were tested and "
              "the full grid is reported unselected.",
@@ -284,7 +360,7 @@ P2_SECTIONS = [
               "selecting the setting that hits a target and presenting it as "
               "the method is the practice this work argues against."),
     dict(
-        head="2.7&nbsp;&nbsp;Defects found only by running it on GPU",
+        head="2.8&nbsp;&nbsp;Defects found only by running it on GPU",
         note="These defects were not visible from CPU testing.",
         header=["Defect", "Consequence"],
         rows=[["diagmask crashed on every GPU run",
