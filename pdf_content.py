@@ -40,7 +40,8 @@ P1_SECTIONS = [
         header=["scale", "precision", "single-edge delta"],
         rows=[["12.4M  (Tier 1)", "float32",
                "4 to 6 ULP, split-half reliability 0.088"],
-              ["138M  (Tier 2)", "float32", "exactly one ULP, 9.5367e-07"],
+              ["138M  (Tier 2)", "float32",
+               "single-edge p90 0 ULP; group of 24 is 1 ULP"],
               ["<b>6.9B  (Tier 3)</b>", "<b>bfloat16</b>",
                "<b>exactly 0.000e+00 across 192 edges</b>"]],
         widths=[.26, .18, .56],
@@ -50,7 +51,9 @@ P1_SECTIONS = [
         figure="f2_floor.png", width=.74,
         caption="Figure 2. Typical single-edge intervention effect, expressed "
                 "in units of the least representable step at the working "
-                "precision. At 6.9B the effect is not small but exactly zero: "
+                "precision. At 138M the single-edge p90 is zero; removing all "
+                "24 candidates together moves the loss by one ULP. At 6.9B "
+                "the single-edge effect is exactly zero: "
                 "the edit shifts logits by 2.58, 3.05 and 0.127 at layers 0, "
                 "16 and 31, and the loss is bit-identical to baseline for all "
                 "192 edges. A criterion thresholding this quantity is "
@@ -89,7 +92,7 @@ P1_SECTIONS = [
              "equal memory, with the gap narrowing as context grows.",
         header=["Context", "Dense", "Sliding", "CRPA", "CRPA vs dense",
                 "Peak memory"],
-        rows=[["4,096", "13.2 ms", "19.5 ms", "31.5 ms", "2.39x slower", "737 MB"],
+        rows=[["4,096", "13.2 ms", "19.5 ms", "31.5 ms", "2.40x slower", "737 MB"],
               ["8,192", "30.0 ms", "62.4 ms", "60.1 ms", "2.00x slower", "1,181 MB"],
               ["16,384", "72.0 ms", "218.1 ms", "119.1 ms", "1.65x slower", "2,067 MB"],
               ["32,768", "&ndash;", "&ndash;", "&ndash;", "<i>not run</i>",
@@ -110,7 +113,7 @@ P1_SECTIONS = [
         caption="Figure 3. Measured forward latency and peak allocated memory "
                 "at the three context lengths that fit. A fused dense kernel "
                 "is faster than the sparse gather path at every length, and "
-                "the gap narrows from 2.39x to 1.65x as context grows, so the "
+                "the gap narrows from 2.40x to 1.65x as context grows, so the "
                 "sparse path is closing but has not overtaken it by 16k. The "
                 "shaded region marks lengths that exhausted memory on every "
                 "attempt and are reported as not run rather than "
@@ -274,15 +277,15 @@ P2_SECTIONS = [
               ["layer subsets, 4 variants", "0.4405 to 0.6494", "no"]],
         widths=[.42, .32, .26],
         aligns=["l", "r", "l"],
-        after="<b>None of the thirteen reproduces the reference.</b> Layer "
+        after="<b>No tested convention reproduces the reference.</b> Layer "
               "subsets move the statistic most, so a subset is the likeliest "
-              "remaining explanation, but none lands on the reference triple. "
+              "remaining explanation, but no tested subset lands on the reference triple. "
               "Reported as unexplained rather than resolved by further search: "
               "selecting the setting that hits a target and presenting it as "
               "the method is the practice this work argues against."),
     dict(
         head="2.7&nbsp;&nbsp;Defects found only by running it on GPU",
-        note="None of these were visible from CPU testing.",
+        note="These defects were not visible from CPU testing.",
         header=["Defect", "Consequence"],
         rows=[["diagmask crashed on every GPU run",
                "bf16 autocast dtype mismatch. One of five arms could never have run"],
@@ -310,6 +313,6 @@ CLOSING = dict(
           ["Open item", "long context at 32k and 64k",
            "GPT-2 reference reproduction"],
           ["Why it is open", "proven memory wall over five attempts",
-           "thirteen conventions tested, none matches"]],
+           "thirteen conventions tested; no convention matches"]],
     widths=[.24, .38, .38],
     aligns=["l", "l", "l"])

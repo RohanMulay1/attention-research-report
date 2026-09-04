@@ -11,8 +11,8 @@ printing, and no series distinguished by colour alone.
 """
 
 import csv
+import argparse
 import json
-import math
 import os
 import pathlib
 
@@ -22,14 +22,33 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-OUT = pathlib.Path(__file__).parent / "figs"
-OUT.mkdir(exist_ok=True)
+OUT = pathlib.Path(os.environ.get(
+    "REPORT_FIG_OUT", pathlib.Path(__file__).parent / "figs"))
 # Result directories of the two source repositories. Override when they
 # are cloned somewhere other than the home directory.
 CRPA = pathlib.Path(os.environ.get(
     "CRPA_RESULTS", os.path.expanduser("~/crpa/results")))
 XSAC = pathlib.Path(os.environ.get(
     "XSAC_RESULTS", os.path.expanduser("~/xsa-controls/results")))
+
+FIGURE_SOURCES = {
+    "f1_check0.png": (CRPA / "resolvability" / "resolvability.json",),
+    "f2_floor.png": (
+        CRPA / "resolvability" / "resolvability.json",
+        CRPA / "tier2" / "long_context.csv",
+        CRPA / "tier3" / "edges_EleutherAI_pythia-6.9b.csv",
+    ),
+    "f3_ladder.png": (XSAC / "ladder.csv", XSAC / "model_metadata.csv"),
+    "f4_length.png": (XSAC / "null_length_sensitivity.csv",),
+    "f5_gqa.png": (XSAC / "gqa.csv",),
+    "f6_paired.png": (
+        XSAC / "paired_tests_s.csv", XSAC / "pilot_decision.json",
+        XSAC / "reference_values.json",
+    ),
+    "f7_generality.png": (XSAC / "generality.csv", XSAC / "ladder.csv"),
+    "f8_cost.png": (CRPA / "figures" /
+                     "fig5b_context_performance_data.csv",),
+}
 
 INK = "#111111"
 GREY = "#555555"
@@ -61,6 +80,7 @@ def legend_above(ax, ncol, fontsize=7.9):
               columnspacing=1.4)
 
 def save(fig, name):
+    OUT.mkdir(parents=True, exist_ok=True)
     p = OUT / name
     fig.patch.set_facecolor("white")
     fig.savefig(p, dpi=220, bbox_inches="tight", facecolor="white")
@@ -100,9 +120,20 @@ def fig_check0():
 
 # --- Figure 2: the measurability floor across three orders of magnitude
 def fig_floor():
-    # Values as recorded in each tier's artifacts; see FINAL_STATUS.md.
+    tier1 = json.loads((CRPA / "resolvability" /
+                        "resolvability.json").read_text(encoding="utf-8"))
+    tier2 = [r for r in read_csv(CRPA / "tier2" / "long_context.csv")
+             if r.get("status") == "completed"]
+    tier3 = read_csv(CRPA / "tier3" /
+                     "edges_EleutherAI_pythia-6.9b.csv")
     labels = ["12.4M\nfloat32", "138M\nfloat32", "6.9B\nbfloat16"]
-    ulps = [5.0, 1.0, 0.0]          # typical single-edge delta, in ULP
+    tier1_ulps = float(np.median(
+        [r["deltas_per_ulp"] for r in tier1["per_seed"]]))
+    tier2_p90 = max(float(r["delta_p90"]) for r in tier2)
+    tier2_ulp = min(float(r["float32_resolution_estimate"]) for r in tier2)
+    tier3_deltas = [float(r["delta_loss"]) for r in tier3]
+    ulps = [tier1_ulps, tier2_p90 / tier2_ulp,
+            max(abs(v) for v in tier3_deltas)]
     fig, ax = plt.subplots(figsize=(6.0, 2.5))
     bars = ax.bar(labels, ulps, width=0.55, color=FILL, edgecolor=ACCENT,
                   linewidth=1.0, zorder=2)
@@ -124,10 +155,8 @@ def fig_floor():
 # --- Figure 3: Check 1 across the scale ladder
 def fig_ladder():
     rows = read_csv(XSAC / "ladder.csv")
-    params = {"gpt2": 124e6, "gpt2-medium": 355e6, "gpt2-large": 774e6,
-              "gpt2-xl": 1.5e9, "EleutherAI/pythia-160m": 160e6,
-              "EleutherAI/pythia-410m": 410e6, "EleutherAI/pythia-1.4b": 1.4e9,
-              "EleutherAI/pythia-2.8b": 2.8e9, "EleutherAI/pythia-6.9b": 6.9e9}
+    params = {r["model"]: float(r["parameters"])
+              for r in read_csv(XSAC / "model_metadata.csv")}
     agg = {}
     for r in rows:
         m = r["model"]
@@ -237,17 +266,25 @@ def fig_paired():
     lo = [float(r["ci_low"]) for r in rows]
     hi = [float(r["ci_high"]) for r in rows]
     y = np.arange(len(rows))
+    pilot = json.loads((XSAC / "pilot_decision.json").read_text(
+        encoding="utf-8"))
+    refs = json.loads((XSAC / "reference_values.json").read_text(
+        encoding="utf-8"))
+    mde = float(pilot["mde"])
+    claimed = float(refs["xsa_independent_replication_effect_nats"])
 
     fig, ax = plt.subplots(figsize=(6.4, 2.2))
     ax.axvline(0, color=INK, lw=1.0, zorder=3)
-    ax.axvspan(-0.00518, 0.00518, color=FILL, alpha=0.5, zorder=0)
-    ax.annotate("unresolvable band (MDE 0.00518)", xy=(0.0048, -0.72),
+    ax.axvspan(-mde, mde, color=FILL, alpha=0.5, zorder=0)
+    ax.annotate("unresolvable band (MDE {:.5f})".format(mde),
+                xy=(mde * 0.93, -0.72),
                 fontsize=7.6, color=GREY, ha="right")
     ax.errorbar(mean, y, xerr=[np.array(mean) - np.array(lo),
                                np.array(hi) - np.array(mean)],
                 fmt="D", color=ACCENT, ms=6, capsize=4, lw=1.5, zorder=4)
-    ax.axvline(-0.00076, color=ACCENT2, lw=1.1, ls=(0, (4, 3)), zorder=3)
-    ax.annotate("claimed effect  -0.00076", xy=(-0.00098, 1.58),
+    ax.axvline(claimed, color=ACCENT2, lw=1.1, ls=(0, (4, 3)), zorder=3)
+    ax.annotate("claimed effect  {:+.5f}".format(claimed),
+                xy=(claimed * 1.29, 1.58),
                 fontsize=7.6, color=ACCENT2, ha="right")
     ax.set_yticks(y)
     ax.set_yticklabels(labels, fontsize=8)
@@ -267,7 +304,15 @@ def fig_generality():
         labels.append(names.get(r["method"], r["method"]))
         frac.append(100 * float(r["self_specific_fraction"]))
     labels.append("XSA self-value\n(this work, 6.9B)")
-    frac.append(41.9)
+    documented_literal = 41.9
+    ladder = read_csv(XSAC / "ladder.csv")
+    target = [r for r in ladder
+              if r["model"] == "EleutherAI/pythia-6.9b"]
+    measured = 100 * (sum(float(r["excess"]) for r in target) /
+                      sum(float(r["cos_self"]) for r in target))
+    if round(measured, 1) != documented_literal:
+        raise ValueError("documented 41.9 literal drifted from ladder.csv")
+    frac.append(documented_literal)
 
     fig, ax = plt.subplots(figsize=(5.9, 2.5))
     cols = [FILL, FILL, "white"]
@@ -335,10 +380,22 @@ def fig_cost():
     save(fig, "f8_cost.png")
 
 
-if __name__ == "__main__":
+def main(argv=None):
+    global OUT
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--out", type=pathlib.Path, default=OUT)
+    args = parser.parse_args(argv)
+    OUT = args.out
+    failures = 0
     for fn in (fig_check0, fig_floor, fig_cost, fig_ladder, fig_length,
                fig_gqa, fig_paired, fig_generality):
         try:
             fn()
         except Exception as exc:
             print("  FAILED", fn.__name__, type(exc).__name__, exc)
+            failures += 1
+    return 1 if failures else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

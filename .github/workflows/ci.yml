@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  standalone-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python build_pdf.py
+
+  rendered-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: RohanMulay1/crpa
+          ref: feat/evidence-scaling
+          path: sources/crpa
+      - uses: actions/checkout@v4
+        with:
+          repository: RohanMulay1/xsa-controls
+          ref: feat/sanity-checks-harness-and-day1-gate
+          path: sources/xsa-controls
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt pytest pyflakes
+      - run: pyflakes build_pdf.py pdf_content.py report_figs.py tests
+      - run: pytest -q
+        env:
+          CRPA_RESULTS: ${{ github.workspace }}/sources/crpa/results
+          XSAC_RESULTS: ${{ github.workspace }}/sources/xsa-controls/results

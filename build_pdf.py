@@ -106,7 +106,12 @@ def hrule(thick=0.9):
 
 CAPTION = st("cap", fontSize=8.5, leading=12.6, textColor=GREY,
              spaceAfter=0)
-FIGDIR = pathlib.Path(__file__).parent / "figs"
+FIGDIR = pathlib.Path(os.environ.get(
+    "REPORT_FIG_DIR", pathlib.Path(__file__).parent / "figs"))
+if os.environ.get("REPORT_REGENERATE_FIGURES") == "1":
+    from report_figs import main as regenerate_figures
+    if regenerate_figures(["--out", str(FIGDIR)]):
+        raise SystemExit("figure regeneration failed")
 
 
 def figure(name, caption, width=0.85):
