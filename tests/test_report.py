@@ -165,16 +165,25 @@ def test_key_report_numbers_trace_to_results():
 
 def test_committed_figures_match_regenerated_pixels(built_report):
     _, figs = built_report
-    import matplotlib.image as mpimg
+    from PIL import Image
     for generated in figs.glob("*.png"):
         committed = ROOT / "figs" / generated.name
         assert committed.exists()
-        a, b = mpimg.imread(generated), mpimg.imread(committed)
-        assert a.shape == b.shape
-        # Font antialiasing is platform-dependent, so exact pixels are not a
-        # portable invariant.  Bound both total and spatial visual drift;
-        # the separate source-trace tests enforce the plotted measurements.
-        delta = np.abs(a.astype(float) - b.astype(float))
+        with Image.open(generated) as ga, Image.open(committed) as cb:
+            aspect_a = ga.width / ga.height
+            aspect_b = cb.width / cb.height
+            assert abs(aspect_a - aspect_b) / aspect_b < 0.01, (
+                "committed figure aspect drift: {}".format(generated.name))
+            # Tight bounding boxes inherit platform font metrics. Resample to
+            # a canonical canvas before comparing the rendered visual content.
+            canvas = (640, 320)
+            a = np.asarray(ga.convert("RGBA").resize(
+                canvas, Image.Resampling.LANCZOS), dtype=float) / 255.0
+            b = np.asarray(cb.convert("RGBA").resize(
+                canvas, Image.Resampling.LANCZOS), dtype=float) / 255.0
+        # Bound both total and spatial visual drift; separate source-trace
+        # tests enforce every plotted measurement.
+        delta = np.abs(a - b)
         mean_delta = float(delta.mean())
         changed = float(np.mean(np.max(delta, axis=2) > (8.0 / 255.0)))
         assert mean_delta < 0.01 and changed < 0.03, (
