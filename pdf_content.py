@@ -260,29 +260,41 @@ P2_SECTIONS = [
              "rebuilds the model's own attention output.",
         header=["model", "statistic", "raw rho", "split-half r", "ceiling",
                 "disattenuated", "verdict"],
-        rows=[["gpt2", "cos(y, v)", "<b>+0.469</b>", "+0.799", "0.892",
-               "<b>+0.526</b>", "reliable"],
-              ["gpt2", "excess", "+0.236", "+0.799", "0.892", "+0.264",
+        rows=[["gpt2", "cos(y, v)", "<b>+0.462</b>", "+0.795", "0.890",
+               "<b>+0.519</b>", "reliable"],
+              ["gpt2", "excess", "+0.279", "+0.795", "0.891", "+0.313",
                "reliable"],
-              ["pythia-160m", "cos(y, v)", "<b>+0.014</b>", "+0.473", "0.686",
-               "+0.020", "attenuated"],
-              ["pythia-160m", "excess", "<b>+0.487</b>", "+0.473", "0.686",
-               "<b>+0.710</b>", "attenuated"],
-              ["pythia-410m", "cos(y, v)", "<b>+0.099</b>", "+0.435", "0.657",
-               "+0.150", "attenuated"],
-              ["pythia-410m", "excess", "<b>+0.216</b>", "+0.435", "0.657",
-               "<b>+0.328</b>", "attenuated"]],
+              ["pythia-160m", "cos(y, v)", "+0.149", "+0.419", "0.645",
+               "+0.231", "attenuated"],
+              ["pythia-160m", "excess", "+0.189", "+0.419", "0.646",
+               "+0.292", "attenuated"],
+              ["pythia-410m", "cos(y, v)", "<b>-0.025</b>", "+0.531", "0.726",
+               "-0.034", "attenuated"],
+              ["pythia-410m", "excess", "<b>+0.249</b>", "+0.531", "0.727",
+               "<b>+0.342</b>", "attenuated"]],
         widths=[.16, .13, .12, .14, .12, .16, .17],
         aligns=["l", "l", "r", "r", "r", "r", "l"],
         band=(2, 3),
-        after="In both Pythia models the raw self-value cosine, the quantity "
-              "the method is motivated by, carries <b>essentially no "
-              "information</b> about the measured effect of removing it, "
-              "while the null-corrected excess predicts it. <b>In GPT-2 the "
-              "ordering reverses.</b> Two models agreeing and a third "
-              "disagreeing is not a law, so the claim is the narrow one: "
-              "whether a raw statistic predicts its own intervention is "
-              "model-dependent."),
+        after="The three models disagree, and the disagreement is the "
+              "result. In <b>GPT-2</b> the raw self-value cosine predicts "
+              "(+0.462) and the excess much less (+0.279). In "
+              "<b>pythia-410m</b> the ordering reverses completely: the raw "
+              "cosine carries <b>nothing</b> (-0.025) while the excess "
+              "carries some (+0.249). <b>pythia-160m supports no ordering "
+              "either way</b>, both being close and weak (+0.149 against "
+              "+0.189), and is reported as abstaining rather than as weak "
+              "evidence for one side.<br/><br/>"
+              "One model each way and one abstaining supports the narrow "
+              "claim &mdash; whether a raw statistic predicts its own "
+              "intervention is model-dependent &mdash; and does not support "
+              "the stronger reading that the null correction rescues "
+              "prediction everywhere.<br/><br/>"
+              "Each statistic is disattenuated by <b>its own</b> split-half "
+              "reliability, and both halves of the statistic are pooled to "
+              "match the pooled effect. An earlier revision did neither, and "
+              "the difference was not cosmetic: pythia-160m's excess "
+              "correlation fell from +0.487 to +0.189 once the pairing was "
+              "made symmetric."),
     dict(
         head="2.4.1&nbsp;&nbsp;The first version of that table did not reproduce",
         note="The same experiment was run three times: twice at 24 evaluation "
@@ -290,14 +302,14 @@ P2_SECTIONS = [
              "two different PyTorch and transformers versions.",
         header=["quantity", "run 1 (n=24)", "run 2 (n=24)", "run 3 (n=64)",
                 "verdict moved?"],
-        rows=[["gpt2 r_delta", "+0.752", "+0.629", "<b>+0.799</b>",
+        rows=[["gpt2 r_delta", "+0.752", "+0.629", "<b>+0.795</b>",
                "no, reliable throughout"],
-              ["pythia-160m r_delta", "+0.304", "+0.194", "<b>+0.473</b>",
+              ["pythia-160m r_delta", "+0.304", "+0.194", "<b>+0.419</b>",
                "<b>yes</b>"],
-              ["pythia-410m r_delta", "+0.446", "-0.007", "<b>+0.435</b>",
+              ["pythia-410m r_delta", "+0.446", "-0.007", "<b>+0.531</b>",
                "<b>yes</b>"],
               ["gpt2 cos(y,v) <i>disattenuated</i>", "+0.521", "+0.527",
-               "<b>+0.526</b>", "no"]],
+               "<b>+0.519</b>", "no"]],
         widths=[.28, .16, .16, .16, .24],
         aligns=["l", "r", "r", "r", "l"],
         band=(3,),
@@ -317,7 +329,7 @@ P2_SECTIONS = [
               "makes that argument better than any reasoning could.</b> "
               "GPT-2's raw correlation moved across these runs, from +0.450 "
               "to +0.469. Its disattenuated value did not: +0.521, +0.527, "
-              "+0.526. Disattenuation divides out precisely the reliability "
+              "+0.526, +0.519. Disattenuation divides out precisely the reliability "
               "that moved, so what is left is stable across budgets, GPUs "
               "and library versions.<br/><br/>"
               "This is Check 0 catching a claim in our own work, for the "
@@ -331,8 +343,8 @@ P2_SECTIONS = [
              "so the gap has to be explained rather than left for a reader "
              "to find.",
         header=["statistic", "prior value", "measured here", "ratio"],
-        rows=[["cos(y, v)", "0.043", "<b>+0.469</b>", "10.9x"],
-              ["excess", "0.017", "+0.236", "13.9x"],
+        rows=[["cos(y, v)", "0.043", "<b>+0.462</b>", "10.7x"],
+              ["excess", "0.017", "+0.279", "16.4x"],
               ["a_ii", "-0.021", "<i>not measured</i>", "&ndash;"]],
         widths=[.28, .24, .26, .22],
         aligns=["l", "r", "r", "r"],
@@ -350,8 +362,8 @@ P2_SECTIONS = [
               "method.<br/><br/>"
               "Measured on 64 real wikitext-103 documents per half, with "
               "disjoint halves and the reliability of the effect established "
-              "first, the same correlation is <b>+0.469 with a ceiling of "
-              "0.892</b>. The prior figures are superseded rather than "
+              "first, the same correlation is <b>+0.462 with a ceiling of "
+              "0.890</b>. The prior figures are superseded rather than "
               "contradicted: they are not measurements of the quantity they "
               "appear to describe. Taken at face value they would have said "
               "the motivating statistic is unrelated to where the "
