@@ -260,18 +260,18 @@ P2_SECTIONS = [
              "rebuilds the model's own attention output.",
         header=["model", "statistic", "raw rho", "split-half r", "ceiling",
                 "disattenuated", "verdict"],
-        rows=[["gpt2", "cos(y, v)", "<b>+0.450</b>", "+0.752", "0.864",
-               "<b>+0.521</b>", "reliable"],
-              ["gpt2", "excess", "+0.190", "+0.752", "0.864", "+0.220",
+        rows=[["gpt2", "cos(y, v)", "<b>+0.469</b>", "+0.799", "0.892",
+               "<b>+0.526</b>", "reliable"],
+              ["gpt2", "excess", "+0.236", "+0.799", "0.892", "+0.264",
                "reliable"],
-              ["pythia-160m", "cos(y, v)", "<b>+0.001</b>", "+0.304", "0.548",
-               "+0.002", "attenuated"],
-              ["pythia-160m", "excess", "<b>+0.396</b>", "+0.304", "0.548",
-               "<b>+0.723</b>", "attenuated"],
-              ["pythia-410m", "cos(y, v)", "<b>+0.039</b>", "+0.446", "0.659",
-               "+0.059", "attenuated"],
-              ["pythia-410m", "excess", "<b>+0.393</b>", "+0.446", "0.659",
-               "<b>+0.596</b>", "attenuated"]],
+              ["pythia-160m", "cos(y, v)", "<b>+0.014</b>", "+0.473", "0.686",
+               "+0.020", "attenuated"],
+              ["pythia-160m", "excess", "<b>+0.487</b>", "+0.473", "0.686",
+               "<b>+0.710</b>", "attenuated"],
+              ["pythia-410m", "cos(y, v)", "<b>+0.099</b>", "+0.435", "0.657",
+               "+0.150", "attenuated"],
+              ["pythia-410m", "excess", "<b>+0.216</b>", "+0.435", "0.657",
+               "<b>+0.328</b>", "attenuated"]],
         widths=[.16, .13, .12, .14, .12, .16, .17],
         aligns=["l", "l", "r", "r", "r", "r", "l"],
         band=(2, 3),
@@ -284,6 +284,81 @@ P2_SECTIONS = [
               "whether a raw statistic predicts its own intervention is "
               "model-dependent."),
     dict(
+        head="2.4.1&nbsp;&nbsp;The first version of that table did not reproduce",
+        note="The same experiment was run three times: twice at 24 evaluation "
+             "documents per half and once at 64, on two different GPUs under "
+             "two different PyTorch and transformers versions.",
+        header=["quantity", "run 1 (n=24)", "run 2 (n=24)", "run 3 (n=64)",
+                "verdict moved?"],
+        rows=[["gpt2 r_delta", "+0.752", "+0.629", "<b>+0.799</b>",
+               "no, reliable throughout"],
+              ["pythia-160m r_delta", "+0.304", "+0.194", "<b>+0.473</b>",
+               "<b>yes</b>"],
+              ["pythia-410m r_delta", "+0.446", "-0.007", "<b>+0.435</b>",
+               "<b>yes</b>"],
+              ["gpt2 cos(y,v) <i>disattenuated</i>", "+0.521", "+0.527",
+               "<b>+0.526</b>", "no"]],
+        widths=[.28, .16, .16, .16, .24],
+        aligns=["l", "r", "r", "r", "l"],
+        band=(3,),
+        after="At 24 documents per half the reliability estimate for the two "
+              "Pythia models is <b>not stable</b>. Repeating the run moved "
+              "pythia-410m's from +0.446 to -0.007, taking the verdict from "
+              "attenuated to unresolvable, and the correlations followed it "
+              "down. Any statement built on the first run's Pythia numbers "
+              "would not have survived a reviewer repeating the "
+              "measurement.<br/><br/>"
+              "At 64 documents per half both models are stable, +0.473 and "
+              "+0.435, and the pattern the first run showed returns. That is "
+              "the run reported above. Both smaller runs are kept in the "
+              "repository rather than discarded, because the disagreement is "
+              "more informative than either alone.<br/><br/>"
+              "<b>The last row is the argument for disattenuation, and it "
+              "makes that argument better than any reasoning could.</b> "
+              "GPT-2's raw correlation moved across these runs, from +0.450 "
+              "to +0.469. Its disattenuated value did not: +0.521, +0.527, "
+              "+0.526. Disattenuation divides out precisely the reliability "
+              "that moved, so what is left is stable across budgets, GPUs "
+              "and library versions.<br/><br/>"
+              "This is Check 0 catching a claim in our own work, for the "
+              "second time in this project. An effect that is not reliably "
+              "measurable produced a correlation that did not survive being "
+              "measured again."),
+    dict(
+        head="2.4.2&nbsp;&nbsp;Why this disagrees with the prior figure by 10x",
+        note="The specification quotes prior GPT-2 values for exactly this "
+             "correlation. Our GPT-2 number is an order of magnitude larger, "
+             "so the gap has to be explained rather than left for a reader "
+             "to find.",
+        header=["statistic", "prior value", "measured here", "ratio"],
+        rows=[["cos(y, v)", "0.043", "<b>+0.469</b>", "10.9x"],
+              ["excess", "0.017", "+0.236", "13.9x"],
+              ["a_ii", "-0.021", "<i>not measured</i>", "&ndash;"]],
+        widths=[.28, .24, .26, .22],
+        aligns=["l", "r", "r", "r"],
+        after="The prior values were measured on <b>one paragraph repeated "
+              "two hundred times</b> &mdash; base loss 0.76 nats against 3.96 "
+              "for real prose. The specification's own bug list flags that "
+              "input as a defect to fix before porting anything.<br/><br/>"
+              "The reason it matters here is specific rather than general. "
+              "<b>A correlation across heads needs variation across heads.</b> "
+              "One paragraph repeated gives a model very little to do "
+              "differently in different heads, so the per-head effects it "
+              "produces are small and largely undifferentiated, and "
+              "correlating them against anything returns approximately zero. "
+              "Near-zero on that input is a property of the input, not of the "
+              "method.<br/><br/>"
+              "Measured on 64 real wikitext-103 documents per half, with "
+              "disjoint halves and the reliability of the effect established "
+              "first, the same correlation is <b>+0.469 with a ceiling of "
+              "0.892</b>. The prior figures are superseded rather than "
+              "contradicted: they are not measurements of the quantity they "
+              "appear to describe. Taken at face value they would have said "
+              "the motivating statistic is unrelated to where the "
+              "intervention helps, on every statistic and every model, which "
+              "is the opposite of what GPT-2 shows and only half of what "
+              "Pythia shows."),
+    dict(
         figure="f10_a2.png", width=.86,
         caption="Figure 8. Correlation between each per-head statistic and "
                 "the measured effect of removing that head's self-value. "
@@ -295,10 +370,13 @@ P2_SECTIONS = [
                 "effect is resolvable, so the correlation can be read. "
                 "n = 3 models, 144 to 384 heads each."),
     dict(
-        head="2.5&nbsp;&nbsp;The matched intervention, at full seed count",
+        head="2.5&nbsp;&nbsp;The matched intervention (underpowered pilot)",
         note="24 cells, 3 arms x 8 seeds, identical initialisation and data "
              "order per seed. Measured step-0 deviation across all five arms "
-             "is 0.000e+00, so the arms start from a common point.",
+             "is 0.000e+00, so the arms start from a common point. This ran "
+             "at 5e7 tokens per run, outside the pre-registered [3.5e8, 6e8] "
+             "band, and is reported as the underpowered pilot; the primary "
+             "endpoint is section 2.6.",
         header=["arm", "mean delta vs baseline", "95% CI", "t", "p", "n"],
         rows=[["<b>random</b>  (primary)", "<b>+0.001190</b>",
                "[+0.000351, +0.002040]", "+2.48", "<b>0.042</b>", "8"],
@@ -317,7 +395,59 @@ P2_SECTIONS = [
                 "which is what Check 2 asks. Reported as a power failure, not "
                 "as a null result. n = 8 seeds per arm."),
     dict(
-        head="2.6&nbsp;&nbsp;The checklist discriminates between methods",
+        head="2.6&nbsp;&nbsp;The primary endpoint, registered and running",
+        note="The pilot above was void as a primary endpoint because it ran "
+             "outside the pre-registered band. Re-running it properly was "
+             "blocked by a cost projection that turned out to be measuring "
+             "the wrong thing.",
+        header=["arm", "measured throughput", "hours for 8 runs", "at $0.74/hr"],
+        rows=[["baseline", "176,467 tok/s", "5.04", "$3.73"],
+              ["xsa", "159,358 tok/s", "5.58", "$4.13"],
+              ["random", "166,267 tok/s", "5.35", "$3.96"],
+              ["<b>total, 24 cells</b>", "&ndash;", "<b>15.96</b>",
+               "<b>$11.81</b>"]],
+        widths=[.26, .26, .24, .24],
+        aligns=["l", "r", "r", "r"],
+        band=(3,),
+        after="The committed calibration projected <b>$24.01</b> for this "
+              "design, which scaled to the registered budget is about $27 and "
+              "breaches a $20 ceiling. That figure is solved from "
+              "<b>diagmask's</b> throughput of 71,918 tok/s, because diagmask "
+              "is the slowest of the five arms and the solver sizes the whole "
+              "design against its worst case. Diagmask is not in this run. "
+              "Measured on the card that would run them, the three arms "
+              "present are between 159,000 and 176,000 tok/s, roughly "
+              "2.3x faster, and the real projection is <b>$11.81</b>. "
+              "Substituting the slowest arm's throughput for arms twice as "
+              "fast would have blocked a run that fits with $8 to spare."),
+    dict(
+        head="2.7&nbsp;&nbsp;What was registered, and what was dropped",
+        note="Registered in the budget ledger before the run started, not "
+             "after it finished.",
+        header=["item", "value"],
+        rows=[["configuration", "CFG_S, arms baseline / xsa / random"],
+              ["seeds", "42, 1337, 2024, 7, 99, 512, 8191, 31337"],
+              ["tokens per run", "399,900,672"],
+              ["inside pre-registered band", "yes, [3.5e8, 6e8]"],
+              ["batch aligned", "yes, 131,072 x 3,051"],
+              ["primary endpoint", "random vs baseline; Holm over "
+                                   "secondaries only"],
+              ["CFG_M scale check", "<i>dropped for budget</i>"]],
+        widths=[.34, .66],
+        aligns=["l", "l"],
+        band=(6,),
+        after="<b>CFG_M is dropped, with the arithmetic rather than a "
+              "shrug.</b> At CFG_M the measured diagmask slowdown is 2.336 "
+              "and the same calibration projects $51.57 for 24 runs at the "
+              "lower budget, about $59 at the registered one. Even applying "
+              "the same throughput correction as above, the floor sits well "
+              "beyond $20. Dropping it follows the specification's own "
+              "pre-registered priority order, which cuts the CFG_M scale "
+              "check first and the secondary arms second. It is recorded as "
+              "dropped for budget, which is its sanctioned status, not as an "
+              "oversight."),
+    dict(
+        head="2.8&nbsp;&nbsp;The checklist discriminates between methods",
         note="Check 1 applied to two further methods on frozen GPT-2, each "
              "with a null matched to the structure the statistic inherits for "
              "free.",
@@ -340,7 +470,7 @@ P2_SECTIONS = [
                 "checklist separates methods rather than debunking all of "
                 "them, which is a stronger position than a blanket null."),
     dict(
-        head="2.7&nbsp;&nbsp;A reproduction left failing on purpose",
+        head="2.9&nbsp;&nbsp;A reproduction left failing on purpose",
         note="Published GPT-2 reference: cos_self 0.5406, cos_null 0.3798, "
              "excess 0.1608. Thirteen measurement conventions were tested and "
              "the full grid is reported unselected.",
@@ -360,7 +490,7 @@ P2_SECTIONS = [
               "selecting the setting that hits a target and presenting it as "
               "the method is the practice this work argues against."),
     dict(
-        head="2.8&nbsp;&nbsp;Defects found only by running it on GPU",
+        head="2.10&nbsp;&nbsp;Defects found only by running it on GPU",
         note="These defects were not visible from CPU testing.",
         header=["Defect", "Consequence"],
         rows=[["diagmask crashed on every GPU run",
