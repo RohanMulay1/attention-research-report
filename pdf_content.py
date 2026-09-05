@@ -5,6 +5,8 @@ caption; one with "header" renders a table. Every number is read from a
 committed artifact in one of the two repositories.
 """
 
+from report_values import V  # noqa: E402
+
 P1_TITLE = "CRPA: is behavioural contribution measurable at all?"
 P1_APPROACH = ("Audited a partitioned-attention repository, then tested whether "
                "its own central claim survives a resolvability check.")
@@ -233,9 +235,11 @@ P2_SECTIONS = [
              "own table reports no KV-head count.",
         header=["model", "query / KV heads", "within-group excess",
                 "across-group excess"],
-        rows=[["Qwen2.5-0.5B", "14 / 2", "<b>+0.2415</b>", "<b>-0.1876</b>"],
-              ["Qwen2.5-1.5B", "12 / 2", "<b>+0.2731</b>", "<b>-0.1922</b>"],
-              ["TinyLlama-1.1B", "32 / 4", "<b>+0.2373</b>", "<b>-0.1126</b>"]],
+        rows=[[m,
+               "%s / %s" % (V("gqa.%s.q_heads" % m), V("gqa.%s.kv_heads" % m)),
+               "<b>%s</b>" % V("gqa.%s.within" % m),
+               "<b>%s</b>" % V("gqa.%s.across" % m)]
+              for m in ("Qwen2.5-0.5B", "Qwen2.5-1.5B", "TinyLlama-1.1B")],
         widths=[.26, .20, .27, .27],
         aligns=["l", "r", "r", "r"]),
     dict(
@@ -260,18 +264,18 @@ P2_SECTIONS = [
              "rebuilds the model's own attention output.",
         header=["model", "statistic", "raw rho", "split-half r", "ceiling",
                 "disattenuated", "verdict"],
-        rows=[["gpt2", "cos(y, v)", "<b>+0.462</b>", "+0.795", "0.890",
-               "<b>+0.519</b>", "reliable"],
-              ["gpt2", "excess", "+0.279", "+0.795", "0.891", "+0.313",
-               "reliable"],
-              ["pythia-160m", "cos(y, v)", "+0.149", "+0.419", "0.645",
-               "+0.231", "attenuated"],
-              ["pythia-160m", "excess", "+0.189", "+0.419", "0.646",
-               "+0.292", "attenuated"],
-              ["pythia-410m", "cos(y, v)", "<b>-0.025</b>", "+0.531", "0.726",
-               "-0.034", "attenuated"],
-              ["pythia-410m", "excess", "<b>+0.249</b>", "+0.531", "0.727",
-               "<b>+0.342</b>", "attenuated"]],
+        rows=[[m, label,
+               ("<b>%s</b>" if bold else "%s") % V("a2.%s.%s.rho" % (m, st)),
+               V("a2.%s.r_delta" % m), V("a2.%s.%s.ceiling" % (m, st)),
+               ("<b>%s</b>" if bold else "%s") % V("a2.%s.%s.disatt" % (m, st)),
+               V("a2.%s.verdict" % m)]
+              for m, st, label, bold in (
+                  ("gpt2", "cos_self", "cos(y, v)", True),
+                  ("gpt2", "excess", "excess", False),
+                  ("pythia-160m", "cos_self", "cos(y, v)", False),
+                  ("pythia-160m", "excess", "excess", False),
+                  ("pythia-410m", "cos_self", "cos(y, v)", True),
+                  ("pythia-410m", "excess", "excess", True))],
         widths=[.16, .13, .12, .14, .12, .16, .17],
         aligns=["l", "l", "r", "r", "r", "r", "l"],
         band=(2, 3),
@@ -398,14 +402,21 @@ P2_SECTIONS = [
         aligns=["l", "r", "r", "r", "r", "r"]),
     dict(
         figure="f6_paired.png", width=.88,
-        caption="Figure 9. Both arms fall inside the shaded band of effects "
-                "the design cannot resolve. The minimum detectable effect is "
-                "0.00518 nats against the 0.00076 the method's own independent "
-                "replication reports, so the study is underpowered about "
-                "sevenfold and cannot settle the question in either direction. "
+        caption="Figure 9. Both arms fall inside the band of effects this "
+                "design cannot resolve. The <b>realised</b> minimum "
+                "detectable effect is " + V("paired.pilot.random.mde") +
+                " nats for the primary random arm and " +
+                V("paired.pilot.xsa.mde") + " for xsa, against the 0.00076 "
+                "the method's own independent replication reports: the arm "
+                "that matters is underpowered about sixfold, the primary arm "
+                "about twofold. A third figure, " + V("planning.mde") +
+                ", appears in pilot_decision.json and was previously quoted "
+                "here as measured. It is the <b>Day-3 planning forecast</b> "
+                "from a three-seed pilot that sized the design, not a result. "
                 "The two arms are also indistinguishable from each other, "
                 "which is what Check 2 asks. Reported as a power failure, not "
-                "as a null result. n = 8 seeds per arm."),
+                "as a null result. n = " + V("paired.pilot.random.n_seeds") +
+                " seeds per arm."),
     dict(
         head="2.6&nbsp;&nbsp;The primary endpoint, registered and running",
         note="The pilot above was void as a primary endpoint because it ran "

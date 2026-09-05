@@ -36,8 +36,24 @@ jobs:
           python-version: "3.11"
           cache: pip
       - run: pip install -r requirements.txt pytest pyflakes
-      - run: pyflakes build_pdf.py pdf_content.py report_figs.py tests
+      - run: pyflakes build_pdf.py pdf_content.py report_figs.py sync_values.py tests
+
+      # The two repositories drifted silently for several revisions because
+      # every number here was a literal with nothing tying it to a CSV. This
+      # fails the build if report_values.py no longer matches the source
+      # results, before anything is rendered from it.
+      - name: Generated values still match the source repositories
+        run: python sync_values.py --check
+        env:
+          CRPA_REPO: ${{ github.workspace }}/sources/crpa
+          XSAC_REPO: ${{ github.workspace }}/sources/xsa-controls
+
+      - name: Rebuild the PDF from those values
+        run: python build_pdf.py
+
       - run: pytest -q tests
         env:
           CRPA_RESULTS: ${{ github.workspace }}/sources/crpa/results
           XSAC_RESULTS: ${{ github.workspace }}/sources/xsa-controls/results
+          CRPA_REPO: ${{ github.workspace }}/sources/crpa
+          XSAC_REPO: ${{ github.workspace }}/sources/xsa-controls

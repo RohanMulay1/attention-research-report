@@ -41,13 +41,21 @@ FIGURE_SOURCES = {
     "f3_ladder.png": (XSAC / "ladder.csv", XSAC / "model_metadata.csv"),
     "f4_length.png": (XSAC / "null_length_sensitivity.csv",),
     "f5_gqa.png": (XSAC / "gqa.csv",),
+    # paired_tests_s.csv is the primary endpoint and does not exist while
+    # it is still running; the pilot stands in and the figure says so. Listed
+    # as ALTERNATIVES: the source check requires one of them, not both.
     "f6_paired.png": (
-        XSAC / "paired_tests_s.csv", XSAC / "pilot_decision.json",
+        (XSAC / "paired_tests_s.csv", XSAC / "paired_tests_s_pilot_5e7.csv"),
+        XSAC / "pilot_decision.json",
         XSAC / "reference_values.json",
     ),
     "f7_generality.png": (XSAC / "generality.csv", XSAC / "ladder.csv"),
     "f8_cost.png": (CRPA / "figures" /
                      "fig5b_context_performance_data.csv",),
+    # Registered when they were added. Leaving a new figure out of this map
+    # means the source-existence check silently stops covering it.
+    "f9_bounded.png": (CRPA / "tier2_bounded_v2" / "long_context.csv",),
+    "f10_a2.png": (XSAC / "a2_correlations.csv",),
 }
 
 INK = "#111111"
@@ -263,7 +271,18 @@ def fig_gqa():
 
 # --- Figure 6: paired intervention effect, with the resolvable floor
 def fig_paired():
-    rows = read_csv(XSAC / "paired_tests_s.csv")
+    # The primary endpoint first, the labelled pilot only as a fallback.
+    # Reading one hardcoded filename is what broke this when the pilot was
+    # renamed out of the way to make room for the primary run.
+    rows = None
+    for name in ("paired_tests_s.csv", "paired_tests_s_pilot_5e7.csv"):
+        if (XSAC / name).exists():
+            rows = read_csv(XSAC / name)
+            if rows:
+                break
+    if not rows:
+        raise FileNotFoundError(
+            "no paired_tests_*.csv in {}, including the pilot".format(XSAC))
     order = {"random": 0, "xsa": 1}
     rows = sorted([r for r in rows if r["arm"] in order],
                   key=lambda r: order[r["arm"]])
