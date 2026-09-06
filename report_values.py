@@ -7,9 +7,9 @@ it, so a number in the PDF can be traced to a committed measurement
 without trusting this file.
 """
 
-GENERATED = '2026-09-05T16:05:43Z'
+GENERATED = '2026-09-06T06:14:18Z'
 SOURCES = {
-    'xsa_controls': '21d3f547759043da35e6ffaa3596fac19e679a99',
+    'xsa_controls': '0f312c061fd707e237691c65789f719d84bc0ddb',
     'crpa': '31b9e30436f72e22e4459b72867b1f1a262d4549',
 }
 
@@ -68,22 +68,22 @@ VALUES = {
     'gqa.TinyLlama-1.1B.kv_heads': {'value': 4.0, 'text': '4', 'source': 'results/gqa.csv', 'selector': 'model=TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T'},
     'gqa.TinyLlama-1.1B.q_heads': {'value': 32.0, 'text': '32', 'source': 'results/gqa.csv', 'selector': 'model=TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T'},
     'gqa.TinyLlama-1.1B.within': {'value': 0.23733443375483418, 'text': '+0.2373', 'source': 'results/gqa.csv', 'selector': 'model=TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T'},
-    'paired.pilot.random.ci_high': {'value': 0.0020402966342014522, 'text': '+0.002040', 'source': 'results/paired_tests_s_pilot_5e7.csv', 'selector': 'arm=random'},
-    'paired.pilot.random.ci_low': {'value': 0.0003508827725398067, 'text': '+0.000351', 'source': 'results/paired_tests_s_pilot_5e7.csv', 'selector': 'arm=random'},
-    'paired.pilot.random.mde': {'value': 0.0013905749922187547, 'text': '0.00139', 'source': 'results/paired_tests_s_pilot_5e7.csv', 'selector': '2.9 * sd_paired / sqrt(n_seeds), arm=random'},
-    'paired.pilot.random.mean_delta': {'value': 0.0011900776966676796, 'text': '+0.001190', 'source': 'results/paired_tests_s_pilot_5e7.csv', 'selector': 'arm=random'},
-    'paired.pilot.random.n_seeds': {'value': 8.0, 'text': '8', 'source': 'results/paired_tests_s_pilot_5e7.csv', 'selector': 'arm=random'},
-    'paired.pilot.random.p': {'value': 0.042094724128834284, 'text': '0.042', 'source': 'results/paired_tests_s_pilot_5e7.csv', 'selector': 'arm=random'},
-    'paired.pilot.random.sd_paired': {'value': 0.0013562551817190513, 'text': '0.001356', 'source': 'results/paired_tests_s_pilot_5e7.csv', 'selector': 'arm=random'},
-    'paired.pilot.random.t': {'value': 2.48186925527088, 'text': '+2.48', 'source': 'results/paired_tests_s_pilot_5e7.csv', 'selector': 'arm=random'},
-    'paired.pilot.xsa.ci_high': {'value': 0.0048071106926341756, 'text': '+0.004807', 'source': 'results/paired_tests_s_pilot_5e7.csv', 'selector': 'arm=xsa'},
-    'paired.pilot.xsa.ci_low': {'value': -0.0012229754299414308, 'text': '-0.001223', 'source': 'results/paired_tests_s_pilot_5e7.csv', 'selector': 'arm=xsa'},
-    'paired.pilot.xsa.mde': {'value': 0.004759026138280723, 'text': '0.00476', 'source': 'results/paired_tests_s_pilot_5e7.csv', 'selector': '2.9 * sd_paired / sqrt(n_seeds), arm=xsa'},
-    'paired.pilot.xsa.mean_delta': {'value': 0.0015148791621942825, 'text': '+0.001515', 'source': 'results/paired_tests_s_pilot_5e7.csv', 'selector': 'arm=xsa'},
-    'paired.pilot.xsa.n_seeds': {'value': 8.0, 'text': '8', 'source': 'results/paired_tests_s_pilot_5e7.csv', 'selector': 'arm=xsa'},
-    'paired.pilot.xsa.p': {'value': 0.3866578389781969, 'text': '0.387', 'source': 'results/paired_tests_s_pilot_5e7.csv', 'selector': 'arm=xsa'},
-    'paired.pilot.xsa.sd_paired': {'value': 0.004641571936858383, 'text': '0.004642', 'source': 'results/paired_tests_s_pilot_5e7.csv', 'selector': 'arm=xsa'},
-    'paired.pilot.xsa.t': {'value': 0.9231194455995396, 'text': '+0.92', 'source': 'results/paired_tests_s_pilot_5e7.csv', 'selector': 'arm=xsa'},
+    'paired.primary.random.ci_high': {'value': 0.0023903968881388016, 'text': '+0.002390', 'source': 'results/paired_tests_s.csv', 'selector': 'arm=random'},
+    'paired.primary.random.ci_low': {'value': -0.00029788990734047616, 'text': '-0.000298', 'source': 'results/paired_tests_s.csv', 'selector': 'arm=random'},
+    'paired.primary.random.mde': {'value': 0.0021484076372337707, 'text': '0.00215', 'source': 'results/paired_tests_s.csv', 'selector': '2.9 * sd_paired / sqrt(n_seeds), arm=random'},
+    'paired.primary.random.mean_delta': {'value': 0.0010564744350363142, 'text': '+0.001056', 'source': 'results/paired_tests_s.csv', 'selector': 'arm=random'},
+    'paired.primary.random.n_seeds': {'value': 8.0, 'text': '8', 'source': 'results/paired_tests_s.csv', 'selector': 'arm=random'},
+    'paired.primary.random.p': {'value': 0.1968845256913458, 'text': '0.197', 'source': 'results/paired_tests_s.csv', 'selector': 'arm=random'},
+    'paired.primary.random.sd_paired': {'value': 0.0020953842883323693, 'text': '0.002095', 'source': 'results/paired_tests_s.csv', 'selector': 'arm=random'},
+    'paired.primary.random.t': {'value': 1.4260682230445534, 'text': '+1.43', 'source': 'results/paired_tests_s.csv', 'selector': 'arm=random'},
+    'paired.primary.xsa.ci_high': {'value': -0.0017092869189552413, 'text': '-0.001709', 'source': 'results/paired_tests_s.csv', 'selector': 'arm=xsa'},
+    'paired.primary.xsa.ci_low': {'value': -0.003966764104170795, 'text': '-0.003967', 'source': 'results/paired_tests_s.csv', 'selector': 'arm=xsa'},
+    'paired.primary.xsa.mde': {'value': 0.0018174300817321105, 'text': '0.00182', 'source': 'results/paired_tests_s.csv', 'selector': '2.9 * sd_paired / sqrt(n_seeds), arm=xsa'},
+    'paired.primary.xsa.mean_delta': {'value': -0.002923833420042099, 'text': '-0.002924', 'source': 'results/paired_tests_s.csv', 'selector': 'arm=xsa'},
+    'paired.primary.xsa.n_seeds': {'value': 8.0, 'text': '8', 'source': 'results/paired_tests_s.csv', 'selector': 'arm=xsa'},
+    'paired.primary.xsa.p': {'value': 0.002299759318182331, 'text': '0.002', 'source': 'results/paired_tests_s.csv', 'selector': 'arm=xsa'},
+    'paired.primary.xsa.sd_paired': {'value': 0.001772575358793375, 'text': '0.001773', 'source': 'results/paired_tests_s.csv', 'selector': 'arm=xsa'},
+    'paired.primary.xsa.t': {'value': -4.665443256029428, 'text': '-4.67', 'source': 'results/paired_tests_s.csv', 'selector': 'arm=xsa'},
     'planning.mde': {'value': 0.005176429127486357, 'text': '0.00518', 'source': 'results/pilot_decision.json', 'selector': 'Day-3 planning forecast'},
     'planning.sigma_paired': {'value': 0.005048673294313334, 'text': '0.00505', 'source': 'results/pilot_decision.json', 'selector': 'Day-3 planning forecast'},
 }

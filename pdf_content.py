@@ -386,43 +386,70 @@ P2_SECTIONS = [
                 "effect is resolvable, so the correlation can be read. "
                 "n = 3 models, 144 to 384 heads each."),
     dict(
-        head="2.5&nbsp;&nbsp;The matched intervention (underpowered pilot)",
-        note="24 cells, 3 arms x 8 seeds, identical initialisation and data "
-             "order per seed. Measured step-0 deviation across all five arms "
-             "is 0.000e+00, so the arms start from a common point. This ran "
-             "at 5e7 tokens per run, outside the pre-registered [3.5e8, 6e8] "
-             "band, and is reported as the underpowered pilot; the primary "
-             "endpoint is section 2.6.",
-        header=["arm", "mean delta vs baseline", "95% CI", "t", "p", "n"],
-        rows=[["<b>random</b>  (primary)", "<b>+0.001190</b>",
-               "[+0.000351, +0.002040]", "+2.48", "<b>0.042</b>", "8"],
-              ["xsa", "+0.001515", "[-0.001223, +0.004807]", "+0.92", "0.387",
-               "8"]],
-        widths=[.20, .24, .26, .10, .10, .10],
-        aligns=["l", "r", "r", "r", "r", "r"]),
+        head="2.5&nbsp;&nbsp;Check 2 at the registered budget, and it passes",
+        note="24 cells, 3 arms x 8 seeds at 399,900,672 tokens per run, one "
+             "budget across the whole grid. Arms share initialisation and "
+             "data order within a seed and step-0 loss is bit-identical "
+             "across them, so a paired difference isolates the intervention.",
+        header=["comparison", "mean delta", "95% CI", "t", "p",
+                "realised MDE"],
+        rows=[["<b>random</b> vs baseline  (pre-registered primary)",
+               V("paired.primary.random.mean_delta"),
+               "[%s, %s]" % (V("paired.primary.random.ci_low"),
+                             V("paired.primary.random.ci_high")),
+               V("paired.primary.random.t"), V("paired.primary.random.p"),
+               V("paired.primary.random.mde")],
+              ["<b>xsa</b> vs baseline  (secondary, Holm)",
+               "<b>%s</b>" % V("paired.primary.xsa.mean_delta"),
+               "[%s, %s]" % (V("paired.primary.xsa.ci_low"),
+                             V("paired.primary.xsa.ci_high")),
+               V("paired.primary.xsa.t"),
+               "<b>%s</b>" % V("paired.primary.xsa.p"),
+               V("paired.primary.xsa.mde")]],
+        widths=[.32, .14, .24, .09, .09, .12],
+        aligns=["l", "r", "r", "r", "r", "r"],
+        band=(1,),
+        after="<b>Check 2 passes, and it passes for the method under "
+              "scrutiny.</b> The pre-registered primary endpoint returns a "
+              "null: a matched arbitrary rank-one direction does not improve "
+              "on baseline and its interval spans zero. XSA does improve, "
+              "and beats that control directly by -0.003980 nats "
+              "(p = 0.0018). The effect is <b>specific to the direction "
+              "removed</b>, which is exactly what Check 2 asks.<br/><br/>"
+              "This reverses what our own 5e7 pilot suggested, where both "
+              "arms came out positive and the arbitrary one significantly "
+              "so. The pilot was not wrong, it was underpowered: its "
+              "realised MDE for the XSA arm was 0.00476 against an effect "
+              "of -0.00292, so it could not have resolved the sign it was "
+              "being asked about. It is kept as the underpowered pilot and "
+              "is what the power analysis is computed from.<br/><br/>"
+              "The size sits between the two prior figures. XSA's own claim "
+              "is -0.017 and the independent replication reports -0.00076; "
+              "we measure -0.00292, about 6x smaller than the first and 4x "
+              "larger than the second. At 51M parameters against XSA's "
+              "0.7-2.7B this adjudicates neither."),
     dict(
         figure="f6_paired.png", width=.88,
-        caption="Figure 9. Both arms fall inside the band of effects this "
-                "design cannot resolve. The <b>realised</b> minimum "
-                "detectable effect is " + V("paired.pilot.random.mde") +
-                " nats for the primary random arm and " +
-                V("paired.pilot.xsa.mde") + " for xsa, against the 0.00076 "
-                "the method's own independent replication reports: the arm "
-                "that matters is underpowered about sixfold, the primary arm "
-                "about twofold. A third figure, " + V("planning.mde") +
-                ", appears in pilot_decision.json and was previously quoted "
-                "here as measured. It is the <b>Day-3 planning forecast</b> "
-                "from a three-seed pilot that sized the design, not a result. "
-                "The two arms are also indistinguishable from each other, "
-                "which is what Check 2 asks. Reported as a power failure, not "
-                "as a null result. n = " + V("paired.pilot.random.n_seeds") +
-                " seeds per arm."),
+        caption="Figure 9. The primary endpoint at 399,900,672 tokens per "
+                "run. XSA improves validation loss by " +
+                V("paired.primary.xsa.mean_delta") + " nats, its interval "
+                "excluding zero; the pre-registered primary arm, a matched "
+                "arbitrary rank-one direction, sits at " +
+                V("paired.primary.random.mean_delta") + " with an interval "
+                "that spans it. The <b>realised</b> minimum detectable "
+                "effects are " + V("paired.primary.xsa.mde") + " and " +
+                V("paired.primary.random.mde") + " nats. A third figure, " +
+                V("planning.mde") + ", appears in pilot_decision.json and was "
+                "once quoted here as measured: it is the <b>Day-3 planning "
+                "forecast</b> that sized the design, not a result. n = " +
+                V("paired.primary.random.n_seeds") + " seeds per arm."),
     dict(
-        head="2.6&nbsp;&nbsp;The primary endpoint, registered and running",
-        note="The pilot above was void as a primary endpoint because it ran "
+        head="2.6&nbsp;&nbsp;What the primary endpoint cost",
+        note="The pilot was void as a primary endpoint because it ran "
              "outside the pre-registered band. Re-running it properly was "
              "blocked by a cost projection that turned out to be measuring "
-             "the wrong thing.",
+             "the wrong thing. Completed in 16.98 GPU-hours of training "
+             "across 21.05 h of pod uptime, $15.58 billed.",
         header=["arm", "measured throughput", "hours for 8 runs", "at $0.74/hr"],
         rows=[["baseline", "176,467 tok/s", "5.04", "$3.73"],
               ["xsa", "159,358 tok/s", "5.58", "$4.13"],
